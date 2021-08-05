@@ -78,6 +78,24 @@ Example with return type
     }
 ```
 
+Use manuality
+```c++
+    void foo(int x, int y)
+    {
+        std::cout << "foo:" << x+y << std::endl;
+    }
+    int main()
+    {
+        EasyDelegate<void(int, int)> fooDelegate;
+        fooDelegate.attach(&foo);
+        if(fooDelegate)
+        {
+            fooDelegate(5+5);
+            fooDelegate.detach();
+        }
+    }
+```
+
 ## License
 
 MIT
