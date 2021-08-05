@@ -27,6 +27,20 @@ class EasyDelegate
 public:
     /**
      * @brief 
+     * 
+     * The method is intended for binding a lambda function to a delegate.
+     * 
+     * @tparam LabbdaFunction lambda function type transited with template parameter.
+     * @param lfunc 
+     */
+    template<class LabbdaFunction>
+	void attach(LabbdaFunction&& lfunc)
+	{
+		mDelegate = std::function(std::forward<LabbdaFunction>(lfunc));
+	}
+
+    /**
+     * @brief 
      * The method is intended for binding a static function to a delegate.
      * A reference to the required function is passed as arguments.
      * 
