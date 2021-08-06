@@ -20,7 +20,7 @@ The standard language library provides a mechanism for storing functional object
 This library makes working with delegates much easier. It allows you to create functional objects in the same way as std::function, but changes the mechanism for binding a function to a functional object.
 The delegate is based on std::function, it performs all the main work. EasyDelegate is an abstraction over std::function and implements a different function binding mechanism.
 
-## Features (more information on the wiki)
+## Features (more information on the [wiki](https://github.com/AdamFull/EasyDelegate/wiki))
 
 ---------------------------------
 
