@@ -54,13 +54,12 @@ public:
 	}
 
     /**
-     * @brief 
+     * @brief For class or const class method. Receiving class pointer and class method reference.
      * 
      * @param c 
      * @param m 
      * @return template <class Class, class ReturnType, class ...Args> 
      */
-    //For class or const class method. Receiving class pointer and class method reference.
     template <class Class, class ReturnType, class ...Args>
     void attach(Class* c, ReturnType (Class::*m)(Args...))
     {
@@ -68,8 +67,8 @@ public:
     }
 
     /**
-     * @brief 
-     * Detaching function delegate
+     * @brief Detaching function delegate
+     * 
      */
 	void detach()
 	{
