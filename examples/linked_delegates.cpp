@@ -2,18 +2,19 @@
 #include "examples.h"
 #include "EasyDelegate.hpp"
 
-/** @example linked_delegates.cpp
- * How to use linked delegates. 
- * Examples */
+using namespace EasyDelegate;
 
 //It's temporary method, will be changed soon
-AddDelegateKeyword(intDelegate, 0)
-AddDelegateKeyword(boolDelegate, 1)
+enum class EEnumerator
+{
+    EIntDelegate,
+    EBoolDelegate
+};
 
-DeclareDelegateFunc(intDelegate, int(int, int, bool))
-DeclareDelegateFunc(boolDelegate, bool(bool, bool))
+//DeclareDelegateFunc(EEnumerator, EEnumerator::EIntDelegate, int(int, int, bool))
+//DeclareDelegateFunc(EEnumerator, EEnumerator::EBoolDelegate, bool(bool, bool))
 
-namespace linked_delegates
+namespace shared_delegates
 {
     int foo(int x, int y, bool ts)
     {
@@ -31,25 +32,25 @@ namespace linked_delegates
 
     void linked_delegates_fun()
     {
-        FDelegates _delegates;                                          //Linker structure
+        /*EasyDelegateAnyCT<EEnumerator> _delegates;                                          //Linker structure
 
-        DelegateCreateLink<intDelegate>(_delegates, &foo);              //Creating link to structure
-        auto iresult = DelegateCall<intDelegate>(_delegates, 50, -50, false);       //Calling function
-        DelegateBreakLink<intDelegate>(_delegates);
+        _delegates.CreateLink<EEnumerator::EIntDelegate>(&foo);              //Creating link to structure
+        auto iresult = _delegates.Call<EEnumerator::EIntDelegate>(50, -50, false);       //Calling function
+        _delegates.BreakLink<EEnumerator::EIntDelegate>();
 
         Foo boo;
-        DelegateCreateLink<boolDelegate>(_delegates, &boo, &Foo::foo);        //Same with classes
-        auto bresult = DelegateCall<boolDelegate>(_delegates, true, true);
-        DelegateBreakLink<boolDelegate>(_delegates);
+        _delegates.CreateLink<EEnumerator::EBoolDelegate>(&boo, &Foo::foo);        //Same with classes
+        auto bresult = _delegates.Call<EEnumerator::EBoolDelegate>(true, true);
+        _delegates.BreakLink<EEnumerator::EBoolDelegate>();
 
-        DelegateCreateLink<boolDelegate>(_delegates, [&](bool b, bool n)
+        _delegates.CreateLink<EEnumerator::EBoolDelegate>([&](bool b, bool n)
         {
             return boo.foo(b, n) || b;
         });
 
-        auto lresult = DelegateCall<boolDelegate>(_delegates, true, false);
-        DelegateBreakLink<boolDelegate>(_delegates);
+        auto lresult = _delegates.Call<EEnumerator::EBoolDelegate>(true, false);
+        _delegates.BreakLink<EEnumerator::EBoolDelegate>();
 
-        std::cout << lresult << std::endl;
+        std::cout << lresult << std::endl;*/
     }
 }

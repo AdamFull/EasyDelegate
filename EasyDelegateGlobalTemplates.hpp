@@ -23,22 +23,44 @@
  */
 
 #pragma once
-#include "EasyDelegateAnyCTImpl.hpp"
-#include "EasyDelegateMultiImpl.hpp"
-#include "EasyDelegateAnyImpl.hpp"
+#include <tuple>
+#include <type_traits>
 
-/**
- * @brief Mechanism for creating a global delegate of the compilation-time
- * 
- */
-#define DeclareDelegateFuncCompileTime(eEnumeraror, eType, fSignature) \
-template<> struct EasyDelegate::__FDelegates<eEnumeraror>::__DelegateType<eType> { using Type = __Delegate<fSignature>; }; \
-template<> struct EasyDelegate::__FDelegates<eEnumeraror>::__DelegateMap<eType> { static __Delegate<fSignature> Value; }; \
-EasyDelegate<fSignature> EasyDelegate::__FDelegates<eEnumeraror>::__DelegateMap<eType>::Value;
+namespace EasyDelegate
+{
+    /**
+     * @brief A helper template for dividing a signature into a return type and a list of argument types
+     * 
+     * @tparam _Signature 
+     */
+    template<class _Signature>
+    struct __SignatureDesc;
 
-/**
- * @brief Mechanism for creating a delegate for runtime __DelegateAny
- * 
- */
-#define DeclareDelegateFuncRuntime(eEnumeraror, eType, fSignature) \
-template<> struct EasyDelegate::__DelegateAny<eEnumeraror>::__DelegateType<eType> { using Type = __Delegate<fSignature>; };
+    /**
+     * @brief Specialization of the helper template for separating the method signature into a return type and an argument type sheet
+     * 
+     * @tparam _ReturnType 
+     * @tparam Args 
+     */
+    template<class _ReturnType, class ...Args>
+    struct __SignatureDesc<_ReturnType(Args...)>
+    {
+        using return_type = _ReturnType;
+        using argument_type = std::tuple<Args...>;
+    };
+
+    /**
+     * @brief Default comparator for the installed numerator
+     * 
+     * @tparam _Enumerator Enumerator class
+     */
+    template<class _Enumerator>
+    struct __EnumeratorComp
+    {
+        static_assert(std::is_enum<_Enumerator>::value);
+        bool operator()(const _Enumerator& l, const _Enumerator& r) const
+        {
+            return static_cast<int>(l) < static_cast<int>(r);
+        }
+    };
+}
