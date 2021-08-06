@@ -1,4 +1,6 @@
 # EasyDelegate
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate?ref=badge_shield)
+
  
 ## Simple delegate system implementation using std::function.
 
@@ -99,3 +101,6 @@ Use manuality
 ## License
 
 MIT
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate?ref=badge_large)
