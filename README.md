@@ -24,10 +24,23 @@ The delegate is based on std::function, it performs all the main work. EasyDeleg
 
 ---------------------------------
 
-* Creating simple and convenient delegates using [TDelegate](https://github.com/AdamFull/EasyDelegate/wiki/Class-__Delegate).
-* Creating a delegate container with the same function signature using [TDelegateMulti](https://github.com/AdamFull/EasyDelegate/wiki/Class-__DelegateMulti). It can also be used for a simple event system.
-* Creating a container of compile-time delegates using [TDelegateAnyCT](https://github.com/AdamFull/EasyDelegate/wiki/Struct-__DelegateAnyCT). (There are problems at the moment.)
-* Creating a container of runtime delegates using [TDelegateAny](https://github.com/AdamFull/EasyDelegate/wiki/Struct-__DelegateAny) tools. (Development is underway)
+### TDelegate ([class implementation](https://github.com/AdamFull/EasyDelegate/wiki/Class-__Delegate))
+
+Implementation of a delegate based on std::function. At the moment, the entire basic algorithm of work is implemented. 
+A "scheduled call" will be added soon.The class allows you to perform simple binding with both class methods and static functions.
+
+### TDelegateMulti ([class implementation](https://github.com/AdamFull/EasyDelegate/wiki/Class-__DelegateMulti))
+
+Allows you to create a delegate store with the same signature. Based on std:: map. Requires creating an object. Read more in the wiki.
+
+### TDelegateAnyCT ([class implementation](https://github.com/AdamFull/EasyDelegate/wiki/Struct-__DelegateAnyCT))
+
+A global container for creating delegates at the compilation stage. It can be used for a simple event system. At the moment, 
+it cannot be used together with TDelegateAny and vice versa.
+
+### TDelegateAny ([class implementation](https://github.com/AdamFull/EasyDelegate/wiki/Struct-__DelegateAny))
+
+A container for creating delegates at the program execution stage. Allows you to add delegates with any signature, and make their further call. At the moment, it cannot be used together with TDelegateAnyCT and vice versa.
 
 ## License
 

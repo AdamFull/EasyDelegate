@@ -24,6 +24,8 @@
 
 #pragma once
 #include <any>
+#include <cassert>
+#include "EasyDelegateMapper.hpp"
 
 namespace EasyDelegate
 {
@@ -33,63 +35,68 @@ namespace EasyDelegate
 	 * @tparam _Enumerator 
 	 * @tparam _Signature 
 	 */
-	template<class _Enumerator, class _Signature, class _Comp>
+	template<class _Enumerator, class _Comp>
 	struct __DelegateAny
 	{
-		template<_Enumerator>
-		struct __DelegateType;
+		/**
+         * @brief Attaching existing delegate if signature is same
+         * 
+         * @tparam eBase User defined enumeration key
+         * @param _delegate existing delegate as r-value
+         */
+        template<_Enumerator eBase>
+        void attach(__Delegate<typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature>&& _delegate)
+        {
+			using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            static_assert(std::is_same<
+            std::remove_reference<decltype(_delegate)>::type, __Delegate<_sign_t>>::value,
+            "Attached delegate has diferent signatures." );
+            m_Delegates.emplace(eBase, std::move(_delegate));
+        }
 
 		/**
 		 * @brief Attaches the passed method to the user defined enumeration key
 		 * 
-		 * @tparam eEnum User defined enumeration key
+		 * @tparam eBase User defined enumeration key
 		 * @tparam LabbdaFunction Lambda function signature
 		 * @param lfunc Universal ling to LambdaFunction signature
 		 */
-		template<_Enumerator eEnum, class _LabbdaFunction>
+		template<_Enumerator eBase, class _LabbdaFunction>
 		void attach(_LabbdaFunction&& lfunc)
 		{
-			using _delegate_t = typename __DelegateType<eEnum>::Type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
-			if (!GetDelegate<_delegate_t>(eEnum, &_delegate))
-			{
-				// TODO: error
-			}
 			_delegate.attach(std::forward<_LabbdaFunction>(lfunc));
-			m_Delegates.emplace(eEnum, std::forward<decltype(_delegate)>(_delegate));
+			m_Delegates.emplace(eBase, std::forward<decltype(_delegate)>(_delegate));
 		}
 
 		/**
 		 * @brief Attaches the passed method to the user defined enumeration key
 		 * 
-		 * @tparam eEnum User defined enumeration key
+		 * @tparam eBase User defined enumeration key
 		 * @tparam Args 
 		 * @param args 
 		 */
-		template<_Enumerator eEnum, class ...Args>
-		constexpr void attach(Args&&... args)
+		template<_Enumerator eBase, class ...Args>
+		void attach(Args&&... args)
 		{
-			using _delegate_t = typename __DelegateType<eEnum>::Type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
-			if (!GetDelegate<_delegate_t>(eEnum, &_delegate))
-			{
-				// TODO: error
-			}
 			_delegate.attach(std::forward<Args>(args)...);
-			m_Delegates.emplace(eEnum, std::forward<decltype(_delegate)>(_delegate));
+			m_Delegates.emplace(eBase, std::forward<decltype(_delegate)>(_delegate));
 		}
 
 		/** 
 		 * @brief Detaching delegate
 		 * 
-		 * @tparam eEnum User defined enumeration key
+		 * @tparam eBase User defined enumeration key
 		 */
-		template<_Enumerator eEnum>
-		constexpr void detach()
+		template<_Enumerator eBase>
+		void detach()
 		{
-			using _delegate_t = typename __DelegateType<eEnum>::Type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
-			if (!GetDelegate<_delegate_t>(eEnum, &_delegate))
+			if (!GetDelegate<_delegate_t>(eBase, &_delegate))
 			{
 				// TODO: error
 			}
@@ -97,17 +104,56 @@ namespace EasyDelegate
 		}
 
 		/**
+         * @brief Executes the delegate for the specified enumerator
+         * 
+         * @tparam eEnum User defined enumeration key
+         * @tparam Args Templated std::tuple arguments 
+         * @param args Delegate arguments
+         */
+        template<_Enumerator eBase, class ...Args>
+        void execute(Args&&... args)
+        {
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using return_type = typename __SignatureDesc<_sign_t>::return_type;
+            //Checking for the correctness of the type used 
+            static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");
+
+            auto &_delegate = _GetDelegateF<eBase>();
+            _delegate(std::forward<Args>(args)...);
+        }
+
+        /**
+         * @brief Evaluates the delegate on the specified enumerator and returns the value
+         * 
+         * @tparam eEnum User defined enumeration key
+         * @tparam Args Templated std::tuple arguments 
+         * @param args Delegate arguments
+         * @return SignatureDesc<_Signature>::return_type auto eval(Args&&... args) 
+         */
+        template <_Enumerator eBase, class... Args>
+        auto eval(Args &&...args)
+        {
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using return_type = typename __SignatureDesc<_sign_t>::return_type;
+            static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegate with return type 'void'. For 'void' you should use 'execute' method."); 
+
+            auto &_delegate = _GetDelegateF<eBase>();
+            return _delegate(std::forward<Args>(args)...);
+        }
+
+		private:
+		/**
 		 * @brief Commits a cast from std::any to the required delegate and returns a reference to it
 		 * 
 		 * @tparam eEnum User defined enumeration key
 		 * @return DelegateType<eEnum>::Type 
 		 */
-		template<_Enumerator eEnum>
-		auto _GetDelegateF() -> typename __DelegateType<eEnum>::Type
+		template<_Enumerator eBase>
+		auto _GetDelegateF() -> typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type
 		{
-			using _delegate_t = typename __DelegateType<eEnum>::Type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
-			if (!GetDelegate<_delegate_t>(eEnum, &_delegate))
+			if (!GetDelegate<_delegate_t>(eBase, &_delegate))
 			{
 				// TODO: error
 			}
@@ -132,78 +178,102 @@ namespace EasyDelegate
 			}
 			catch (const std::bad_any_cast& e)
 			{
-
+				assert(false && e.what());
 			}
 			out = nullptr;
 			return false;
 		}
 
-	private:
 		std::map<_Enumerator, std::any, _Comp> m_Delegates;
 	};
 
-	template<class _Enumerator, class _Signature, class _Comp = __EnumeratorComp<_Enumerator>>
-	using TDelegateAny = __DelegateAny<_Enumerator, _Signature, _Comp>;
+	template<class _Enumerator, class _Comp = __EnumeratorComp<_Enumerator>>
+	using TDelegateAny = __DelegateAny<_Enumerator, _Comp>;
 }
 
 /**
  * @example AnyExample
  * 
  * @code
- * 
- *  
-    #include "EasyDelegate.hpp"
+#include <iostream>
+#include "EasyDelegate.hpp"
 
-	using namespace EasyDelegate;
+using namespace EasyDelegate;
 
-	enum class EEnumerator
+//    An important note. You cannot use TDelegateAny and TDelegateAnyCT at the 
+//    same time due to some technical problems. The same is the case with the 
+//    enumerator. When the problem is resolved, this will be indicated in the update.
+
+//Your enumerator type
+enum class EEnumerator
+{
+    EIntDelegate,
+    EBoolDelegate,
+    EAnother
+};
+
+//This declarations should be in cpp file
+DeclareDelegateFuncRuntime(EEnumerator, EEnumerator::EIntDelegate, int(int, int, bool))
+DeclareDelegateFuncRuntime(EEnumerator, EEnumerator::EBoolDelegate, bool(bool, bool))
+DeclareDelegateFuncRuntime(EEnumerator, EEnumerator::EAnother, void(int, int))
+
+int foo(int x, int y, bool ts)
+{
+    return ts ? x : y;
+}
+
+void boob(int x, int y)
+{
+    std::cout << x + y << std::endl;
+}
+
+class Foo
+{
+public:
+    bool foo(bool ts, bool fs)
     {
-        EIntDelegate,
-        EBoolDelegate
-    };
-
-    DeclareDelegateFuncRuntime(EEnumerator, EEnumerator::EIntDelegate, int(int, int, bool))
-    DeclareDelegateFuncRuntime(EEnumerator, EEnumerator::EBoolDelegate, bool(bool, bool))
-
-    int foo(int x, int y, bool ts)
-    {
-        return ts ? x : y;
+        return ts && fs;
     }
+};
 
-    class Foo
-    {
-    public:
-        bool foo(bool ts, bool fs)
-        {
-            return ts && fs;
-        }
-    };
+int main()
+{
+    //Declare any delegate object
+    TDelegateAny<EEnumerator> _delegates;
+    //Attach to static function 
+    _delegates.attach<EEnumerator::EIntDelegate>(&foo);
+    //Call function
+    auto iresult = _delegates.eval<EEnumerator::EIntDelegate>(50, -50, false);
 
-    int main()
-    {
-        TDelegateAny<EEnumerator> _delegates;                                          //Linker structure
+    //Now with class object (also you can use 'this', if your delegate inside a class)
+    Foo boo;
+    //Attach class method to delegate container
+    _delegates.attach<EEnumerator::EBoolDelegate>(&boo, &Foo::foo); //Same with classes
+    auto bresult = _delegates.eval<EEnumerator::EBoolDelegate>(true, true);
+    _delegates.detach<EEnumerator::EBoolDelegate>();
 
-        _delegates.CreateLink<EEnumerator::EIntDelegate>(&foo);              //Creating link to structure
-        auto iresult = _delegates.Call<EEnumerator::EIntDelegate>(50, -50, false);       //Calling function
-        _delegates.BreakLink<EEnumerator::EIntDelegate>();
+    //Attaching existing delegate
+    TDelegate<void(int, int)> AnotherDelegate;
+    AnotherDelegate.attach(&boob);
 
-        Foo boo;
-        _delegates.CreateLink<EEnumerator::EBoolDelegate>(&boo, &Foo::foo);        //Same with classes
-        auto bresult = _delegates.Call<EEnumerator::EBoolDelegate>(true, true);
-        _delegates.BreakLink<EEnumerator::EBoolDelegate>();
+    _delegates.attach<EEnumerator::EAnother>(std::move(AnotherDelegate));
 
-        _delegates.CreateLink<EEnumerator::EBoolDelegate>([&](bool b, bool n)
-        {
-            return boo.foo(b, n) || b;
-        });
+    _delegates.execute<EEnumerator::EAnother>(1, 2);
 
-        auto lresult = _delegates.Call<EEnumerator::EBoolDelegate>(true, false);
-        _delegates.BreakLink<EEnumerator::EBoolDelegate>();
+    //And lambda functions
+    _delegates.attach<EEnumerator::EBoolDelegate>([&](bool b, bool n)
+    { 
+        return boo.foo(b, n) || b;
+    });
 
-        std::cout << lresult << std::endl;
+    auto lresult = _delegates.eval<EEnumerator::EBoolDelegate>(true, false);
+    _delegates.detach<EEnumerator::EBoolDelegate>();
 
-        return 0;
-    }
+    std::cout << lresult << std::endl;
+
+    return 0;
+}
+
     @endcode
  * 
  */

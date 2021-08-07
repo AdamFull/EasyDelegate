@@ -28,17 +28,25 @@
 #include "EasyDelegateAnyImpl.hpp"
 
 /**
- * @brief Mechanism for creating a global delegate of the compilation-time
- * 
+ * @brief Mechanism for creating a global delegate of the compilation-time.
+ *  This declarations should be in cpp file.
  */
 #define DeclareDelegateFuncCompileTime(eEnumeraror, eType, fSignature) \
-template<> struct EasyDelegate::__FDelegates<eEnumeraror>::__DelegateType<eType> { using Type = __Delegate<fSignature>; }; \
-template<> struct EasyDelegate::__FDelegates<eEnumeraror>::__DelegateMap<eType> { static __Delegate<fSignature> Value; }; \
-EasyDelegate<fSignature> EasyDelegate::__FDelegates<eEnumeraror>::__DelegateMap<eType>::Value;
+template<> struct EasyDelegate::__DelegateTypeStore<TakeStoreKey<eEnumeraror>(eType)> \
+{ \
+    using type = EasyDelegate::__Delegate<fSignature>; \
+    using signature = fSignature; \
+}; \
+template<> struct EasyDelegate::__DelegateObjectStore<TakeStoreKey<eEnumeraror>(eType)> { static EasyDelegate::__Delegate<fSignature> value; }; \
+EasyDelegate::__Delegate<fSignature> EasyDelegate::__DelegateObjectStore<TakeStoreKey<eEnumeraror>(eType)>::value;
 
 /**
- * @brief Mechanism for creating a delegate for runtime __DelegateAny
- * 
+ * @brief Mechanism for creating a delegate for runtime __DelegateAny.
+ * This declarations should be in cpp file.
  */
 #define DeclareDelegateFuncRuntime(eEnumeraror, eType, fSignature) \
-template<> struct EasyDelegate::__DelegateAny<eEnumeraror>::__DelegateType<eType> { using Type = __Delegate<fSignature>; };
+template<> struct EasyDelegate::__DelegateTypeStore<TakeStoreKey<eEnumeraror>(eType)> \
+{ \
+    using type = EasyDelegate::__Delegate<fSignature>; \
+    using signature = fSignature; \
+};

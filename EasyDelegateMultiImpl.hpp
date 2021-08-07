@@ -40,61 +40,76 @@ namespace EasyDelegate
     {
     public:
         /**
-         * @brief Attaches the passed method to the User defined enumeration key
+         * @brief Attaching existing delegate if signature is same
          * 
-         * @tparam eEnum User defined enumeration key
-         * @tparam LabbdaFunction Lambda object
-         * @param lfunc 
+         * @tparam eBase User defined enumeration key
+         * @param _delegate existing delegate as r-value
          */
-        template<_Enumerator eEnum, class _LabbdaFunction>
-        void attach(_LabbdaFunction&& lfunc)
+        template<_Enumerator eBase>
+        void attach(__Delegate<_Signature>&& _delegate)
         {
-            __Delegate<_Signature> _delegate;
-            _delegate.attach(std::forward<_LabbdaFunction>(lfunc));
-            mDelegates.emplace(eEnum, _delegate);
+            static_assert(std::is_same<
+            std::remove_reference<decltype(_delegate)>::type, __Delegate<_Signature>>::value,
+            "Attached delegate has diferent signatures." );
+            m_Delegates.emplace(eBase, std::move(_delegate));
         }
 
         /**
          * @brief Attaches the passed method to the User defined enumeration key
          * 
-         * @tparam eEnum User defined enumeration key
+         * @tparam eBase User defined enumeration key
+         * @tparam LabbdaFunction Lambda object
+         * @param lfunc 
+         */
+        template<_Enumerator eBase, class _LabbdaFunction>
+        void attach(_LabbdaFunction&& lfunc)
+        {
+            __Delegate<_Signature> _delegate;
+            _delegate.attach(std::forward<_LabbdaFunction>(lfunc));
+            m_Delegates.emplace(eBase, _delegate);
+        }
+
+        /**
+         * @brief Attaches the passed method to the User defined enumeration key
+         * 
+         * @tparam eBase User defined enumeration key
          * @tparam Args Templated std::tuple arguments 
          * @param args Delegate arguments
          */
-        template<_Enumerator eEnum, class ...Args>
+        template<_Enumerator eBase, class ...Args>
         void attach(Args&&... args)
         {
             __Delegate<_Signature> _delegate;
             _delegate.attach(std::forward<Args>(args)...);
-            mDelegates.emplace(eEnum, _delegate);
+            m_Delegates.emplace(eBase, _delegate);
         }
 
         /**
          * @brief Detaching delegate from included std::map container
          * 
-         * @tparam eEnum User defined enumeration key
+         * @tparam eBase User defined enumeration key
          */
-        template<_Enumerator eEnum>
+        template<_Enumerator eBase>
         void detach()
         {
-            mDelegates.erase(eEnum);
+            m_Delegates.erase(eBase);
         }
 
         /**
          * @brief Executes the delegate for the specified enumerator
          * 
-         * @tparam eEnum User defined enumeration key
+         * @tparam eBase User defined enumeration key
          * @tparam Args Templated std::tuple arguments 
          * @param args Delegate arguments
          */
-        template<_Enumerator eEnum, class ...Args>
+        template<_Enumerator eBase, class ...Args>
         void execute(Args&&... args)
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
             //Checking for the correctness of the type used
-            static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");  
+            static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");
 
-            mDelegates[eEnum](std::forward<Args>(args)...);
+            m_Delegates[eBase](std::forward<Args>(args)...);
         }
 
         /**
@@ -110,7 +125,7 @@ namespace EasyDelegate
             //Checking for the correctness of the type used 
             static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");
 
-            for (auto &[_key, _delegate] : mDelegates)
+            for (auto &[_key, _delegate] : m_Delegates)
             {
                 if (_delegate)
                 {
@@ -122,18 +137,18 @@ namespace EasyDelegate
         /**
          * @brief Evaluates the delegate on the specified enumerator and returns the value
          * 
-         * @tparam eEnum User defined enumeration key
+         * @tparam eBase User defined enumeration key
          * @tparam Args Templated std::tuple arguments 
          * @param args Delegate arguments
          * @return SignatureDesc<_Signature>::return_type auto eval(Args&&... args) 
          */
-        template<_Enumerator eEnum, class ...Args> 
+        template<_Enumerator eBase, class ...Args> 
         auto eval(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
             static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegates with return type 'void'. For 'void' you should use 'execute' method.");
 
-            return mDelegates[eEnum](std::forward<Args>(args)...);
+            return m_Delegates[eBase](std::forward<Args>(args)...);
         }
         
         /**
@@ -151,7 +166,7 @@ namespace EasyDelegate
             static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegates with return type 'void'. For 'void' you should use 'execute' method.");
             std::map<_Enumerator, return_type> _results;
 
-            for (auto &[_key, _delegate] : mDelegates)
+            for (auto &[_key, _delegate] : m_Delegates)
             {
                 if (_delegate)
                 {
@@ -165,18 +180,18 @@ namespace EasyDelegate
         /**
          * @brief Illegal in any c++ standart
          * 
-         * @tparam eEnum 
+         * @tparam eBase 
          * @tparam Args 
          * @param args 
          * @return SignatureDesc<_Signature>::return_type 
          */
-        template<_Enumerator eEnum, class ...Args>
+        template<_Enumerator eBase, class ...Args>
         auto operator()(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
         {
-            return mDelegates[eEnum](std::forward<Args>(args)...);
+            return m_Delegates[eBase](std::forward<Args>(args)...);
         }
     private:
-        std::map<_Enumerator, __Delegate<_Signature>, _Comp> mDelegates;
+        std::map<_Enumerator, __Delegate<_Signature>, _Comp> m_Delegates;
     };
 
     template<class _Enumerator, class _Signature, class _Comp = __EnumeratorComp<_Enumerator>>
@@ -187,80 +202,93 @@ namespace EasyDelegate
  * @example Example of using TDelegateMulti
  * 
  * @code
- * 
- * using namespace EasyDelegate;
- * 
- * enum class EEnumerator
-    {
-        EFirst,
-        ESecond,
-        EThird,
-        EFourth
-    };
+#include "EasyDelegate.hpp"
+#include <iostream>
 
+using namespace EasyDelegate;
+
+enum class EEnumerator
+{
+    EFirst,
+    ESecond,
+    EThird,
+    EFourth,
+    EAnother
+};
+
+void foo(int x, int y)
+{
+    std::cout << x - y << std::endl;
+}
+
+void boo(int x, int y)
+{
+    std::cout << x + y << std::endl;
+}
+
+int ifoo(int x, int y)
+{
+    return x - y;
+}
+
+int iboo(int x, int y)
+{
+    return x + y;
+}
+
+class Foo
+{
+public:
     void foo(int x, int y)
     {
-        std::cout << x-y << std::endl;
+        std::cout << "Class foo: " << x / y << std::endl;
     }
 
-    void boo(int x, int y)
+    int boo(int x, int y)
     {
-        std::cout << x+y << std::endl;
+        return x * (x % y) * (x - y);
+    }
+};
+
+int main()
+{
+    Foo cfoo;
+
+    //Declare multi delegate container
+    TDelegateMulti<EEnumerator, void(int, int)> MultDelegate;
+    //Attaching delegates
+    MultDelegate.attach<EEnumerator::EFirst>(&foo);
+    MultDelegate.attach<EEnumerator::ESecond>(&boo);
+    MultDelegate.attach<EEnumerator::EThird>(&cfoo, &Foo::foo);
+
+    //Attaching existing delegate
+    TDelegate<void(int, int)> AnotherDelegate;
+    AnotherDelegate.attach(&foo);
+
+    MultDelegate.attach<EEnumerator::EAnother>(std::move(AnotherDelegate));
+
+    //Executing all delegates
+    MultDelegate.execute(5, 6);
+
+    //Declare multi delegate container with another signature
+    TDelegateMulti<EEnumerator, int(int, int)> MultDelegateE;
+    MultDelegateE.attach<EEnumerator::EFirst>(&ifoo);
+    MultDelegateE.attach<EEnumerator::ESecond>(&iboo);
+    MultDelegateE.attach<EEnumerator::EThird>([&](int x, int y)
+    { 
+        return x * x - cfoo.boo(x * y, x % y) + y * y; 
+    });
+    MultDelegateE.attach<EEnumerator::EFourth>(&cfoo, &Foo::boo);
+
+    //Evaluating all delegates
+    auto results = MultDelegateE.eval(5, 9);
+    for (auto &[_key, _value] : results)
+    {
+        std::cout << _value << std::endl;
     }
 
-    int ifoo(int x, int y)
-    {
-        return x-y;
-    }
-
-    int iboo(int x, int y)
-    {
-        return x+y;
-    }
-
-    class Foo
-    {
-    public:
-        void foo(int x, int y)
-        {
-            std::cout << "Class foo: " << x/y << std::endl;
-        }
-
-        int boo(int x, int y)
-        {
-            return x * (x % y)*(x - y);
-        }
-    };
-
-    int main()
-    {
-        Foo cfoo;
-
-        TDelegateMulti<EEnumerator, void(int, int)> MultDelegate;
-        MultDelegate.attach<EEnumerator::EFirst>(&foo);
-        MultDelegate.attach<EEnumerator::ESecond>(&boo);
-        MultDelegate.attach<EEnumerator::EThird>(&cfoo, &Foo::foo);
-
-        MultDelegate.execute(5, 6);
-
-        TDelegateMulti<EEnumerator, int(int, int)> MultDelegateE;
-        MultDelegateE.attach<EEnumerator::EFirst>(&ifoo);
-        MultDelegateE.attach<EEnumerator::ESecond>(&iboo);
-        MultDelegateE.attach<EEnumerator::EThird>([&](int x, int y)
-        {
-            return x*x - cfoo.boo(x*y, x%y) + y*y;
-        });
-        MultDelegateE.attach<EEnumerator::EFourth>(&cfoo, &Foo::boo);
-
-        auto results = MultDelegateE.eval(5, 9);
-        for(auto& [_key, _value] : results)
-        {
-            std::cout << _value << std::endl;
-        }
-
-        return 0;
-    }
-
+    return 0;
+}
  * @endcode
  * 
  */
