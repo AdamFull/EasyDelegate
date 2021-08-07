@@ -30,7 +30,8 @@
 namespace EasyDelegate
 {
 	/**
-	 * @brief 
+	 * @brief A container for creating delegates at the program execution stage. Allows you to add delegates with any signature, 
+	 * and make their further call. At the moment, it cannot be used together with TDelegateAnyCT and vice versa.
 	 * 
 	 * @tparam _Enumerator 
 	 * @tparam _Signature 
