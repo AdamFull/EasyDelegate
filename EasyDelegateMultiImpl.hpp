@@ -46,12 +46,12 @@ namespace EasyDelegate
          * @param _delegate existing delegate as r-value
          */
         template<_Enumerator eBase>
-        void attach(__Delegate<_Signature>&& _delegate)
+        inline void attach(__Delegate<_Signature>&& _delegate)
         {
             static_assert(std::is_same<
             std::remove_reference<decltype(_delegate)>::type, __Delegate<_Signature>>::value,
             "Attached delegate has diferent signatures." );
-            m_Delegates.emplace(eBase, std::move(_delegate));
+            m_Delegates.try_emplace(eBase, std::move(_delegate));
         }
 
         /**
@@ -62,11 +62,11 @@ namespace EasyDelegate
          * @param lfunc 
          */
         template<_Enumerator eBase, class _LabbdaFunction>
-        void attach(_LabbdaFunction&& lfunc)
+        inline void attach(_LabbdaFunction&& lfunc)
         {
             __Delegate<_Signature> _delegate;
             _delegate.attach(std::forward<_LabbdaFunction>(lfunc));
-            m_Delegates.emplace(eBase, _delegate);
+            m_Delegates.emplace(eBase, std::move(_delegate));
         }
 
         /**
@@ -77,11 +77,11 @@ namespace EasyDelegate
          * @param args Delegate arguments
          */
         template<_Enumerator eBase, class ...Args>
-        void attach(Args&&... args)
+        inline void attach(Args&&... args)
         {
             __Delegate<_Signature> _delegate;
             _delegate.attach(std::forward<Args>(args)...);
-            m_Delegates.emplace(eBase, _delegate);
+            m_Delegates.emplace(eBase, std::move(_delegate));
         }
 
         /**
@@ -90,7 +90,7 @@ namespace EasyDelegate
          * @tparam eBase User defined enumeration key
          */
         template<_Enumerator eBase>
-        void detach()
+        inline void detach()
         {
             m_Delegates.erase(eBase);
         }
@@ -103,7 +103,7 @@ namespace EasyDelegate
          * @param args Delegate arguments
          */
         template<_Enumerator eBase, class ...Args>
-        void execute(Args&&... args)
+        inline void execute(Args&&... args)
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
             //Checking for the correctness of the type used
@@ -119,7 +119,7 @@ namespace EasyDelegate
          * @param args Delegate arguments
          */
         template<class ...Args>
-        void execute(Args&&... args)
+        inline void execute(Args&&... args)
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
             //Checking for the correctness of the type used 
@@ -143,7 +143,7 @@ namespace EasyDelegate
          * @return SignatureDesc<_Signature>::return_type auto eval(Args&&... args) 
          */
         template<_Enumerator eBase, class ...Args> 
-        auto eval(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
+        inline auto eval(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
             static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegates with return type 'void'. For 'void' you should use 'execute' method.");
@@ -159,7 +159,7 @@ namespace EasyDelegate
          * @return std::map<_Enumerator, return_type> 
          */
         template<class ...Args>
-        auto eval(Args&&... args) -> typename std::map<_Enumerator, 
+        inline auto eval(Args&&... args) -> typename std::map<_Enumerator, 
         typename __SignatureDesc<_Signature>::return_type>
         {
             using return_type = typename __SignatureDesc<_Signature>::return_type;
@@ -186,7 +186,7 @@ namespace EasyDelegate
          * @return SignatureDesc<_Signature>::return_type 
          */
         template<_Enumerator eBase, class ...Args>
-        auto operator()(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
+        inline auto operator()(Args&&... args) -> typename __SignatureDesc<_Signature>::return_type
         {
             return m_Delegates[eBase](std::forward<Args>(args)...);
         }

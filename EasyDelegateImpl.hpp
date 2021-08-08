@@ -39,29 +39,73 @@ namespace EasyDelegate
     class __Delegate
     {
     public:
+        __Delegate() = default;
+
         /**
-         * @brief The method is intended for binding a lambda function to a delegate.
+         * @brief Construct a new delegate object with lambda function or static function.
+         * 
+         * @tparam _LabbdaFunction 
+         * @param lfunc 
+         */
+        template<class _LabbdaFunction>
+        __Delegate(_LabbdaFunction&& lfunc)
+        {
+            attach(std::forward<_LabbdaFunction>(lfunc));
+        }
+
+        /**
+         * @brief Construct a new delegate object for class or const class method. Receiving class pointer and class method reference.
+         * 
+         * @param c Class pointer
+         * @param m Method reference
+         * 
+         */
+        template <class _Class, class _ReturnType, class ...Args>
+        __Delegate(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
+        {
+            attach(c, m);
+        }
+
+        /**
+         * @brief Default copy constructor
+         * 
+         * @param rDelegate 
+         */
+        __Delegate(const __Delegate<_Signature>& rDelegate) = default;
+
+        /**
+         * @brief Default copy assignment operator
+         * 
+         * @param lDelegate 
+         * @return __Delegate<_Signature>& 
+         */
+        __Delegate<_Signature>& operator=(const __Delegate<_Signature>& lDelegate) = default;
+
+        /**
+         * @brief Default move constructor
+         * 
+         * @param rDelegate 
+         */
+        __Delegate(__Delegate<_Signature>&& rDelegate) = default;
+
+        /**
+         * @brief Default move assignment constructor
+         * 
+         * @param rDelegate 
+         * @return __Delegate<_Signature>& 
+         */
+        __Delegate<_Signature>& operator=(__Delegate<_Signature>&& rDelegate) = default;
+
+        /**
+         * @brief The method is intended for binding a lambda function or function to a delegate.
          * 
          * @tparam LabbdaFunction lambda function type transited with template parameter.
          * @param lfunc 
          */
         template<class _LabbdaFunction>
-        void attach(_LabbdaFunction&& lfunc)
+        inline void attach(_LabbdaFunction&& lfunc) noexcept
         {
-            mDelegate = std::function(std::forward<_LabbdaFunction>(lfunc));
-        }
-
-        /**
-         * @brief The method is intended for binding a static function to a delegate. 
-         * A reference to the required function is passed as arguments.
-         * 
-         * @param args static function reference...
-         * @return void
-         */
-        template<class ...Args>
-        void attach(Args&&... args)
-        {
-            mDelegate = make_delegate(std::forward<Args>(args)...);
+            mDelegate = std::forward<_LabbdaFunction>(lfunc);
         }
 
         /**
@@ -72,7 +116,7 @@ namespace EasyDelegate
          * 
          */
         template <class _Class, class _ReturnType, class ...Args>
-        void attach(_Class* c, _ReturnType (_Class::*m)(Args...))
+        inline void attach(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
         {
             mDelegate = make_delegate(c, m);
         }
@@ -81,7 +125,7 @@ namespace EasyDelegate
          * @brief Detaching function delegate
          * 
          */
-        void detach()
+        inline void detach() noexcept
         {
             mDelegate = nullptr;
         }
@@ -94,12 +138,12 @@ namespace EasyDelegate
          * @return auto 
          */
         template<class ...Args>
-        auto operator()(Args&&... args)
+        inline auto operator()(Args&&... args)
         {
             return mDelegate(std::forward<Args>(args)...);
         }
 
-        operator bool()
+        inline operator bool()
         {
             return static_cast<bool>(mDelegate);
         }
@@ -119,7 +163,7 @@ namespace EasyDelegate
          * @return std::function<ReturnType(Args...)> 
          */
         template <class _ReturnType, class ...Args>
-        std::function<_ReturnType(Args...)> make_delegate(_ReturnType (*m)(Args...))
+        inline std::function<_ReturnType(Args...)> make_delegate(_ReturnType (*m)(Args...)) noexcept
         {
             return [=](Args&&... args) { return (*m)(std::forward<Args>(args)...); };
         }
@@ -137,7 +181,7 @@ namespace EasyDelegate
          * @return std::function<ReturnType(Args...)> 
          */
         template <class _Class, class _ReturnType, class ...Args>
-        std::function<_ReturnType(Args...)> make_delegate(_Class* c, _ReturnType (_Class::*m)(Args...))
+        inline std::function<_ReturnType(Args...)> make_delegate(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
         {
             return [=](Args&&... args) { return (c->*m)(std::forward<Args>(args)...); };
         }
@@ -155,7 +199,7 @@ namespace EasyDelegate
          * @return std::function<ReturnType(Args...)> 
          */
         template <class _Class, class _ReturnType, class ... Args>
-        std::function<_ReturnType(Args...)> make_delegate(const _Class* c, _ReturnType (_Class::*m)(Args...) const)
+        inline std::function<_ReturnType(Args...)> make_delegate(const _Class* c, _ReturnType (_Class::*m)(Args...) const) noexcept
         {
             return [=](Args&&... args) { return (c->*m)(std::forward<Args>(args)...); };
         }
@@ -197,7 +241,11 @@ int main()
     //Calling delegate function          
     auto iresult = fooDelegate(5, 10, true);    
     //Removing function from delegate. After detach, you can attach another function.
-    fooDelegate.detach();                       
+    fooDelegate.detach();             
+
+    //Attaching in constructor
+    TDelegate<int(int, int, bool)> fooConstructable(&foo);      
+    iresult += fooConstructable(10, 5, false);   
 
     //Using delegate with class member
     Foo fuf;
@@ -207,6 +255,10 @@ int main()
     fooClassDelegate.attach(&fuf, &Foo::foo);
     //Executing delegate and getting result
     auto bresult = fooClassDelegate(true, false);
+
+    //Attaching class method in constructor
+    TDelegate<bool(bool, bool)> fooClassConstructable(&fuf, &Foo::foo);
+    bresult = bresult && fooClassConstructable(false, true);
 
     //We can attach another function after detach
     fooClassDelegate.detach();

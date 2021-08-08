@@ -26,7 +26,11 @@ int main()
     //Calling delegate function          
     auto iresult = fooDelegate(5, 10, true);    
     //Removing function from delegate. After detach, you can attach another function.
-    fooDelegate.detach();                       
+    fooDelegate.detach();             
+
+    //Attaching in constructor
+    TDelegate<int(int, int, bool)> fooConstructable(&foo);      
+    iresult += fooConstructable(10, 5, false);   
 
     //Using delegate with class member
     Foo fuf;
@@ -36,6 +40,10 @@ int main()
     fooClassDelegate.attach(&fuf, &Foo::foo);
     //Executing delegate and getting result
     auto bresult = fooClassDelegate(true, false);
+
+    //Attaching class method in constructor
+    TDelegate<bool(bool, bool)> fooClassConstructable(&fuf, &Foo::foo);
+    bresult = bresult && fooClassConstructable(false, true);
 
     //We can attach another function after detach
     fooClassDelegate.detach();

@@ -62,6 +62,7 @@ int main()
     _delegates.attach<EEnumerator::EAnother>(std::move(AnotherDelegate));
 
     _delegates.execute<EEnumerator::EAnother>(1, 2);
+    _delegates.execute<EEnumerator::EAnother>(2, 1);
 
     //And lambda functions
     _delegates.attach<EEnumerator::EBoolDelegate>([&](bool b, bool n)

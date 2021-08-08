@@ -24,7 +24,6 @@
 
 #pragma once
 #include "EasyDelegateImpl.hpp"
-#include "EasyDelegateMapper.hpp"
 
 namespace EasyDelegate
 {
@@ -44,7 +43,7 @@ namespace EasyDelegate
          * @param lfunc  
          */
         template<_Enumerator eBase, class _LabbdaFunction>
-		static void attach(_LabbdaFunction&& lfunc)
+		static inline void attach(_LabbdaFunction&& lfunc) noexcept
         {
             using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
             _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
@@ -59,7 +58,7 @@ namespace EasyDelegate
          * @param args 
          */
         template <_Enumerator eBase, class... Args>
-        static void attach(Args &&...args)
+        static inline void attach(Args &&...args) noexcept
         {
             using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
             _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
@@ -73,7 +72,7 @@ namespace EasyDelegate
          * 
          */
         template <_Enumerator eBase>
-        static void detach()
+        static inline void detach() noexcept
         {
             using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
             _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
@@ -88,7 +87,7 @@ namespace EasyDelegate
          * @param args Delegate arguments
          */
         template<class ...Args>
-        static void execute(Args&&... args)
+        static inline void execute(Args&&... args)
         {
             using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
@@ -108,7 +107,7 @@ namespace EasyDelegate
          * @return SignatureDesc<_Signature>::return_type auto eval(Args&&... args) 
          */
         template <_Enumerator eBase, class... Args>
-        static auto eval(Args &&...args)
+        static inline auto eval(Args &&...args)
         {
             using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;

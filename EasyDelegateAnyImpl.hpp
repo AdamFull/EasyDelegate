@@ -25,7 +25,6 @@
 #pragma once
 #include <any>
 #include <cassert>
-#include "EasyDelegateMapper.hpp"
 
 namespace EasyDelegate
 {
@@ -46,7 +45,7 @@ namespace EasyDelegate
          * @param _delegate existing delegate as r-value
          */
         template<_Enumerator eBase>
-        void attach(__Delegate<typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature>&& _delegate)
+        inline void attach(__Delegate<typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature>&& _delegate)
         {
 			using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
             static_assert(std::is_same<
@@ -63,12 +62,12 @@ namespace EasyDelegate
 		 * @param lfunc Universal ling to LambdaFunction signature
 		 */
 		template<_Enumerator eBase, class _LabbdaFunction>
-		void attach(_LabbdaFunction&& lfunc)
+		inline void attach(_LabbdaFunction&& lfunc)
 		{
 			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
 			_delegate.attach(std::forward<_LabbdaFunction>(lfunc));
-			m_Delegates.emplace(eBase, std::forward<decltype(_delegate)>(_delegate));
+			m_Delegates.emplace(eBase, std::move(_delegate));
 		}
 
 		/**
@@ -79,12 +78,12 @@ namespace EasyDelegate
 		 * @param args 
 		 */
 		template<_Enumerator eBase, class ...Args>
-		void attach(Args&&... args)
+		inline void attach(Args&&... args)
 		{
 			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
 			_delegate.attach(std::forward<Args>(args)...);
-			m_Delegates.emplace(eBase, std::forward<decltype(_delegate)>(_delegate));
+			m_Delegates.emplace(eBase, std::move(_delegate) /*rvalue*/);
 		}
 
 		/** 
@@ -93,7 +92,7 @@ namespace EasyDelegate
 		 * @tparam eBase User defined enumeration key
 		 */
 		template<_Enumerator eBase>
-		void detach()
+		inline void detach()
 		{
 			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
@@ -112,7 +111,7 @@ namespace EasyDelegate
          * @param args Delegate arguments
          */
         template<_Enumerator eBase, class ...Args>
-        void execute(Args&&... args)
+        inline void execute(Args&&... args)
         {
             using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
@@ -132,7 +131,7 @@ namespace EasyDelegate
          * @return SignatureDesc<_Signature>::return_type auto eval(Args&&... args) 
          */
         template <_Enumerator eBase, class... Args>
-        auto eval(Args &&...args)
+        inline auto eval(Args &&...args)
         {
             using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
@@ -150,7 +149,7 @@ namespace EasyDelegate
 		 * @return DelegateType<eEnum>::Type 
 		 */
 		template<_Enumerator eBase>
-		auto _GetDelegateF() -> typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type
+		inline auto _GetDelegateF() -> typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type
 		{
 			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
 			_delegate_t _delegate;
@@ -170,7 +169,7 @@ namespace EasyDelegate
 		 * @param out 
 		 */
 		template<class _CastType, class _T>
-		bool GetDelegate(const _Enumerator& eEnum, _T* out)
+		inline bool GetDelegate(const _Enumerator& eEnum, _T* out)
 		{
 			try
 			{
@@ -260,6 +259,7 @@ int main()
     _delegates.attach<EEnumerator::EAnother>(std::move(AnotherDelegate));
 
     _delegates.execute<EEnumerator::EAnother>(1, 2);
+    _delegates.execute<EEnumerator::EAnother>(2, 1);
 
     //And lambda functions
     _delegates.attach<EEnumerator::EBoolDelegate>([&](bool b, bool n)
@@ -274,7 +274,6 @@ int main()
 
     return 0;
 }
-
     @endcode
  * 
  */
