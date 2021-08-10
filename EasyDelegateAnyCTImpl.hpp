@@ -45,8 +45,8 @@ namespace EasyDelegate
         template<_Enumerator eBase, class _LabbdaFunction>
 		static inline void attach(_LabbdaFunction&& lfunc) noexcept
         {
-            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
-            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
+            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
+            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator, eBase>()>::value;
             _delegate.attach(std::forward<_LabbdaFunction>(lfunc));
         }
 
@@ -60,8 +60,8 @@ namespace EasyDelegate
         template <_Enumerator eBase, class... Args>
         static inline void attach(Args &&...args) noexcept
         {
-            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
-            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
+            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
+            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator, eBase>()>::value;
             _delegate.attach(std::forward<Args>(args)...);
         }
 
@@ -74,8 +74,8 @@ namespace EasyDelegate
         template <_Enumerator eBase>
         static inline void detach() noexcept
         {
-            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
-            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
+            using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
+            _delegate_t& _delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator, eBase>()>::value;
             _delegate.detach();
         }
 
@@ -89,12 +89,12 @@ namespace EasyDelegate
         template<class ...Args>
         static inline void execute(Args&&... args)
         {
-            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
             //Checking for the correctness of the type used 
             static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");
 
-            auto &_delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
+            auto &_delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator, eBase>()>::value;
             _delegate(std::forward<Args>(args)...);
         }
 
@@ -109,11 +109,11 @@ namespace EasyDelegate
         template <_Enumerator eBase, class... Args>
         static inline auto eval(Args &&...args)
         {
-            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
             static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegate with return type 'void'. For 'void' you should use 'execute' method."); 
 
-            auto &_delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator>(eBase)>::value;
+            auto &_delegate = __DelegateObjectStore<TakeStoreKey<_Enumerator, eBase>()>::value;
             return _delegate(std::forward<Args>(args)...);
         }
     };
@@ -135,9 +135,10 @@ using namespace EasyDelegate;
 //    same time due to some technical problems. The same is the case with the 
 //    enumerator. When the problem is resolved, this will be indicated in the update.
 
+// If you want use multiple enums, start new enum with higher index
 enum class EEnumerator
 {
-    EIntDelegate,
+    EIntDelegate = 100,
     EBoolDelegate
 };
 

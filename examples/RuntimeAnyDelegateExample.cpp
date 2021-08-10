@@ -7,7 +7,7 @@ using namespace EasyDelegate;
 //    same time due to some technical problems. The same is the case with the 
 //    enumerator. When the problem is resolved, this will be indicated in the update.
 
-//Your enumerator type
+// If you want use multiple enums, start new enum with higher index
 enum class EEnumerator
 {
     EIntDelegate,

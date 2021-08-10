@@ -45,9 +45,9 @@ namespace EasyDelegate
          * @param _delegate existing delegate as r-value
          */
         template<_Enumerator eBase>
-        inline void attach(__Delegate<typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature>&& _delegate)
+        inline void attach(__Delegate<typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature>&& _delegate)
         {
-			using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+			using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature;
             static_assert(std::is_same<
             std::remove_reference<decltype(_delegate)>::type, __Delegate<_sign_t>>::value,
             "Attached delegate has diferent signatures." );
@@ -64,7 +64,7 @@ namespace EasyDelegate
 		template<_Enumerator eBase, class _LabbdaFunction>
 		inline void attach(_LabbdaFunction&& lfunc)
 		{
-			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
 			_delegate_t _delegate;
 			_delegate.attach(std::forward<_LabbdaFunction>(lfunc));
 			m_Delegates.emplace(eBase, std::move(_delegate));
@@ -80,7 +80,7 @@ namespace EasyDelegate
 		template<_Enumerator eBase, class ...Args>
 		inline void attach(Args&&... args)
 		{
-			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
 			_delegate_t _delegate;
 			_delegate.attach(std::forward<Args>(args)...);
 			m_Delegates.emplace(eBase, std::move(_delegate) /*rvalue*/);
@@ -94,7 +94,7 @@ namespace EasyDelegate
 		template<_Enumerator eBase>
 		inline void detach()
 		{
-			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
 			_delegate_t _delegate;
 			if (!GetDelegate<_delegate_t>(eBase, &_delegate))
 			{
@@ -113,7 +113,7 @@ namespace EasyDelegate
         template<_Enumerator eBase, class ...Args>
         inline void execute(Args&&... args)
         {
-            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
             //Checking for the correctness of the type used 
             static_assert(std::is_same<return_type, void>::value, "Trying to execute delegates with return type 'non-void'. For 'non-void' you should use 'eval' method.");
@@ -133,7 +133,7 @@ namespace EasyDelegate
         template <_Enumerator eBase, class... Args>
         inline auto eval(Args &&...args)
         {
-            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::signature;
+            using _sign_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::signature;
             using return_type = typename __SignatureDesc<_sign_t>::return_type;
             static_assert(!std::is_same<return_type, void>::value, "Trying to evaluate delegate with return type 'void'. For 'void' you should use 'execute' method."); 
 
@@ -149,9 +149,9 @@ namespace EasyDelegate
 		 * @return DelegateType<eEnum>::Type 
 		 */
 		template<_Enumerator eBase>
-		inline auto _GetDelegateF() -> typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type
+		inline auto _GetDelegateF() -> typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type
 		{
-			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator>(eBase)>::type;
+			using _delegate_t = typename __DelegateTypeStore<TakeStoreKey<_Enumerator, eBase>()>::type;
 			_delegate_t _delegate;
 			if (!GetDelegate<_delegate_t>(eBase, &_delegate))
 			{
@@ -204,7 +204,7 @@ using namespace EasyDelegate;
 //    same time due to some technical problems. The same is the case with the 
 //    enumerator. When the problem is resolved, this will be indicated in the update.
 
-//Your enumerator type
+// If you want use multiple enums, start new enum with higher index
 enum class EEnumerator
 {
     EIntDelegate,
