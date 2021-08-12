@@ -35,9 +35,11 @@ namespace EasyDelegate
      * 
      * @tparam _Signature signature of the delegate function
      */
-    template<class _Signature>
-    class __Delegate
+    template <class _Signature>
+    class __Delegate : public std::function<_Signature>
     {
+        using base_t = std::function<_Signature>;
+
     public:
         __Delegate() = default;
 
@@ -47,8 +49,8 @@ namespace EasyDelegate
          * @tparam _LabbdaFunction 
          * @param lfunc 
          */
-        template<class _LabbdaFunction>
-        __Delegate(_LabbdaFunction&& lfunc)
+        template <class _LabbdaFunction>
+        __Delegate(_LabbdaFunction &&lfunc)
         {
             attach(std::forward<_LabbdaFunction>(lfunc));
         }
@@ -60,8 +62,8 @@ namespace EasyDelegate
          * @param m Method reference
          * 
          */
-        template <class _Class, class _ReturnType, class ...Args>
-        __Delegate(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
+        template <class _Class, class _ReturnType, class... Args>
+        __Delegate(_Class *c, _ReturnType (_Class::*m)(Args...)) noexcept
         {
             attach(c, m);
         }
@@ -71,7 +73,7 @@ namespace EasyDelegate
          * 
          * @param rDelegate 
          */
-        __Delegate(const __Delegate<_Signature>& rDelegate) = default;
+        __Delegate(const __Delegate<_Signature> &rDelegate) = default;
 
         /**
          * @brief Default copy assignment operator
@@ -79,14 +81,14 @@ namespace EasyDelegate
          * @param lDelegate 
          * @return __Delegate<_Signature>& 
          */
-        __Delegate<_Signature>& operator=(const __Delegate<_Signature>& lDelegate) = default;
+        __Delegate<_Signature> &operator=(const __Delegate<_Signature> &lDelegate) = default;
 
         /**
          * @brief Default move constructor
          * 
          * @param rDelegate 
          */
-        __Delegate(__Delegate<_Signature>&& rDelegate) = default;
+        __Delegate(__Delegate<_Signature> &&rDelegate) = default;
 
         /**
          * @brief Default move assignment constructor
@@ -94,7 +96,7 @@ namespace EasyDelegate
          * @param rDelegate 
          * @return __Delegate<_Signature>& 
          */
-        __Delegate<_Signature>& operator=(__Delegate<_Signature>&& rDelegate) = default;
+        __Delegate<_Signature> &operator=(__Delegate<_Signature> &&rDelegate) = default;
 
         /**
          * @brief The method is intended for binding a lambda function or function to a delegate.
@@ -102,10 +104,10 @@ namespace EasyDelegate
          * @tparam LabbdaFunction lambda function type transited with template parameter.
          * @param lfunc 
          */
-        template<class _LabbdaFunction>
-        inline void attach(_LabbdaFunction&& lfunc) noexcept
+        template <class _LabbdaFunction>
+        inline void attach(_LabbdaFunction &&lfunc) noexcept
         {
-            mDelegate = std::forward<_LabbdaFunction>(lfunc);
+            base_t::_Reset(std::forward<_LabbdaFunction>(lfunc));
         }
 
         /**
@@ -115,10 +117,10 @@ namespace EasyDelegate
          * @param m Method reference
          * 
          */
-        template <class _Class, class _ReturnType, class ...Args>
-        inline void attach(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
+        template <class _Class, class _ReturnType, class... Args>
+        inline void attach(_Class *c, _ReturnType (_Class::*m)(Args...)) noexcept
         {
-            mDelegate = make_delegate(c, m);
+            base_t::_Reset(std::move(make_delegate(c, m)));
         }
 
         /**
@@ -127,7 +129,7 @@ namespace EasyDelegate
          */
         inline void detach() noexcept
         {
-            mDelegate = nullptr;
+            //base_t::_Set(nullptr);
         }
 
         /**
@@ -137,19 +139,11 @@ namespace EasyDelegate
          * @param args Delegate arguments 
          * @return auto 
          */
-        template<class ...Args>
-        inline auto operator()(Args&&... args)
+        template <class... Args>
+        inline auto operator()(Args &&...args)
         {
-            return mDelegate(std::forward<Args>(args)...);
+            return base_t::operator()(std::forward<Args>(args)...);
         }
-
-        inline operator bool()
-        {
-            return static_cast<bool>(mDelegate);
-        }
-
-    private:
-        std::function<_Signature> mDelegate;
 
     private:
         /**
@@ -162,10 +156,11 @@ namespace EasyDelegate
          * @param m reference to function
          * @return std::function<ReturnType(Args...)> 
          */
-        template <class _ReturnType, class ...Args>
+        template <class _ReturnType, class... Args>
         inline std::function<_ReturnType(Args...)> make_delegate(_ReturnType (*m)(Args...)) noexcept
         {
-            return [=](Args&&... args) { return (*m)(std::forward<Args>(args)...); };
+            return [=](Args &&...args)
+            { return (*m)(std::forward<Args>(args)...); };
         }
 
         /**
@@ -180,10 +175,11 @@ namespace EasyDelegate
          * @param m reference to class method
          * @return std::function<ReturnType(Args...)> 
          */
-        template <class _Class, class _ReturnType, class ...Args>
-        inline std::function<_ReturnType(Args...)> make_delegate(_Class* c, _ReturnType (_Class::*m)(Args...)) noexcept
+        template <class _Class, class _ReturnType, class... Args>
+        inline std::function<_ReturnType(Args...)> make_delegate(_Class *c, _ReturnType (_Class::*m)(Args...)) noexcept
         {
-            return [=](Args&&... args) { return (c->*m)(std::forward<Args>(args)...); };
+            return [=](Args &&...args)
+            { return (c->*m)(std::forward<Args>(args)...); };
         }
 
         /**
@@ -198,14 +194,15 @@ namespace EasyDelegate
          * @param m reference to class method
          * @return std::function<ReturnType(Args...)> 
          */
-        template <class _Class, class _ReturnType, class ... Args>
-        inline std::function<_ReturnType(Args...)> make_delegate(const _Class* c, _ReturnType (_Class::*m)(Args...) const) noexcept
+        template <class _Class, class _ReturnType, class... Args>
+        inline std::function<_ReturnType(Args...)> make_delegate(const _Class *c, _ReturnType (_Class::*m)(Args...) const) noexcept
         {
-            return [=](Args&&... args) { return (c->*m)(std::forward<Args>(args)...); };
+            return [=](Args &&...args)
+            { return (c->*m)(std::forward<Args>(args)...); };
         }
     };
 
-    template<class _Signature>
+    template <class _Signature>
     using TDelegate = __Delegate<_Signature>;
 }
 
