@@ -4,8 +4,8 @@
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FAdamFull%2FEasyDelegate?ref=badge_shield)
-[![GitHub Issues](https://img.shields.io/github/issues/AdamFull/IoT_Screen_Emulator.svg)](https://github.com/AdamFull/EasyDelegate/issues)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Issues](https://img.shields.io/github/issues/AdamFull/EasyDelegate.svg)](https://github.com/AdamFull/EasyDelegate/issues)
+[![License](https://img.shields.io/badge/license-Mozila-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 
 ## Problem
 
